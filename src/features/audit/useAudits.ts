@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import type { Audit } from '@/types/database.types'
 
@@ -16,6 +16,18 @@ export function useAudits() {
       if (error) throw error
       return (data ?? []) as unknown as AuditLead[]
     },
+  })
+}
+
+/** Delete an audit. The linked contact/deal are kept (FK set null). */
+export function useDeleteAudit() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('audits').delete().eq('id', id)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['audits'] }),
   })
 }
 

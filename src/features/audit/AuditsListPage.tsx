@@ -1,12 +1,19 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { format } from 'date-fns'
-import { ExternalLink } from 'lucide-react'
-import { useAudits } from './useAudits'
+import { ExternalLink, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAudits, useDeleteAudit } from './useAudits'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 function gradePill(grade: string | null): string {
   if (!grade) return 'bg-zinc-100 text-zinc-500'
@@ -18,6 +25,8 @@ function gradePill(grade: string | null): string {
 
 export default function AuditsListPage() {
   const { data: audits, isLoading } = useAudits()
+  const deleteAudit = useDeleteAudit()
+  const [confirmId, setConfirmId] = useState<string | null>(null)
 
   return (
     <div>
@@ -39,20 +48,21 @@ export default function AuditsListPage() {
               <TableHead className="text-right">Score</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Report</TableHead>
+              <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 7 }).map((__, j) => (
+                  {Array.from({ length: 8 }).map((__, j) => (
                     <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (audits ?? []).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
                   No audits yet. Share <code>/audit</code> to start capturing leads.
                 </TableCell>
               </TableRow>
@@ -82,12 +92,39 @@ export default function AuditsListPage() {
                       View <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" title="Delete audit" onClick={() => setConfirmId(a.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={confirmId !== null} onOpenChange={(o) => !o && setConfirmId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this audit?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Removes the audit and its report. The linked contact and deal are kept.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmId) deleteAudit.mutate(confirmId, { onSuccess: () => toast.success('Audit deleted') })
+                setConfirmId(null)
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
