@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
-import { buildEmail, type EmailBrand, type EmailProps } from '../../src/features/email/templates'
-import { serverSupabase } from './supabase'
+import { buildEmail, type EmailBrand, type EmailProps } from '../../src/features/email/templates.js'
+import { serverSupabase } from './supabase.js'
 
 export interface SendArgs {
   to: string

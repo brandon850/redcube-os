@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { runAudit } from '../src/lib/seo/audit'
+import { runAudit } from '../src/lib/seo/audit.js'
 
 // Stateless SEO crawl + score. Persistence happens client-side via the
 // `ingest_audit` Supabase RPC, so this function needs no DB credentials.

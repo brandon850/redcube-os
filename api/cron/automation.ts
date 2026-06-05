@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { serverSupabase } from '../_lib/supabase'
-import { sendEmail } from '../_lib/email'
-import type { EmailBrand } from '../../src/features/email/templates'
+import { serverSupabase } from '../_lib/supabase.js'
+import { sendEmail } from '../_lib/email.js'
+import type { EmailBrand } from '../../src/features/email/templates.js'
 
 // Runs every 5 minutes (vercel.json). Processes due sequence steps:
 //  - send_email → render+send via Resend, log it

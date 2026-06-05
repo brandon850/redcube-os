@@ -1,6 +1,6 @@
 // Orchestrator: crawl + aux-file checks + score. Server-side only.
-import { crawlSite, checkAuxFiles } from './crawler'
-import { scoreSite } from './scorer'
+import { crawlSite, checkAuxFiles } from './crawler.js'
+import { scoreSite } from './scorer.js'
 import type { AuditResult } from './types'
 
 export type { AuditResult } from './types'
