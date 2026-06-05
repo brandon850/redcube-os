@@ -82,6 +82,16 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
       <p>If you'd like to pick things back up, just reply to this email and we'll take it from there.</p>
       <p>— ${p.repName || 'The team'}</p>`,
   },
+  audit_results: {
+    id: 'audit_results',
+    label: 'Audit results',
+    subject: (_b, p) => `Your SEO audit${p.domain ? ` for ${p.domain}` : ''} is ready${p.grade ? ` — grade ${p.grade}` : ''}`,
+    body: (b, p) => `
+      <p>Hi ${p.contactName || 'there'},</p>
+      <p>Your free SEO audit${p.domain ? ` for <strong>${p.domain}</strong>` : ''} is ready${p.grade ? `, and it scored a <strong>${p.grade}</strong>` : ''}. We checked findability, speed, mobile, trust, content, and links.</p>
+      <p>${btn(b.color || '#E8172B', p.reportUrl || '#', 'View your full report')}</p>
+      <p>Want help acting on it? Just reply to this email.</p>`,
+  },
   proposal_sent: {
     id: 'proposal_sent',
     label: 'Proposal sent',

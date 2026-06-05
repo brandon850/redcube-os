@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { sendTransactional } from '@/lib/notify'
 import type { Contact, Deal, Proposal, ProposalPackage } from '@/types/database.types'
 
 export type ProposalRow = Proposal & {
@@ -118,6 +119,9 @@ export function useSendProposal() {
         body: 'Proposal sent',
         metadata: { proposal_id: proposal.id },
       })
+
+      // Email the client the proposal link (best-effort).
+      await sendTransactional('proposal_sent', proposal.id)
     },
     onSuccess: (_d, p) => {
       qc.invalidateQueries({ queryKey: ['proposal', p.id] })
@@ -135,6 +139,7 @@ export function useRunOnboarding() {
       if (error) throw new Error(error.message) // PostgrestError isn't an Error instance
       const r = data as { ok?: boolean; error?: string; amount?: number } | null
       if (!r?.ok) throw new Error(r?.error || 'Onboarding failed')
+      void sendTransactional('onboarding_welcome', dealId) // best-effort welcome email
       return r
     },
     onSuccess: () => {

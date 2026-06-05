@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { sendTransactional } from '@/lib/notify'
 import type { AuditResult } from '@/lib/seo/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,6 +46,7 @@ export default function AuditPage() {
       if (rpcErr || !result?.ok || !result.audit_id) {
         throw new Error(result?.error || rpcErr?.message || 'Could not save your report.')
       }
+      void sendTransactional('audit_results', result.audit_id) // best-effort emails the report link
       navigate(`/audit/report/${result.audit_id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
