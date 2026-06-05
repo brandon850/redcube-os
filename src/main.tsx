@@ -11,7 +11,11 @@ import { Toaster } from '@/components/ui/sonner'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      // Treat data as stale immediately so navigating to a page refetches current
+      // data (e.g. a lead created by the audit flow shows on the pipeline without a
+      // manual refresh). Cached data still renders instantly while it revalidates.
+      staleTime: 0,
+      refetchOnWindowFocus: true,
       retry: 1,
     },
   },
