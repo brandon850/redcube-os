@@ -52,6 +52,24 @@ export function useUpdateUser() {
   })
 }
 
+/** Invite a teammate (admin only) via the /api/invite serverless function. */
+export function useInviteUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: { email: string; role: string; full_name?: string }) => {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token ?? ''}` },
+        body: JSON.stringify({ ...input, appUrl: window.location.origin }),
+      })
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      if (!res.ok || !json.ok) throw new Error(json.error || 'Could not send invite')
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+  })
+}
+
 // ─── Own profile ───────────────────────────────────────────────────────────────
 export function useUpdateProfile(userId: string) {
   const qc = useQueryClient()
