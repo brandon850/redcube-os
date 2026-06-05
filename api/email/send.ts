@@ -50,29 +50,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (kind === 'proposal_sent') {
       const { data: p } = await supabase
-        .from('proposals')
-        .select('view_token, brand_id, contact:contacts(email, first_name, last_name)')
-        .eq('id', id).maybeSingle()
-      const contact = (p as { contact?: { email: string; first_name: string; last_name: string } } | null)?.contact
-      if (!contact?.email) { res.status(400).json({ error: 'No contact email' }); return }
+        .from('proposals').select('view_token, brand_id, contact_id').eq('id', id).maybeSingle()
+      if (!p) { console.error('[email/send] proposal not found', id); res.status(400).json({ error: 'Proposal not found' }); return }
+      const { data: contact } = await supabase
+        .from('contacts').select('email, first_name').eq('id', p.contact_id).maybeSingle()
+      if (!contact?.email) { console.error('[email/send] no contact email', { proposal: id, contact_id: p.contact_id }); res.status(400).json({ error: 'No contact email' }); return }
       await sendEmail({
         to: contact.email,
         templateId: 'proposal_sent',
-        brand: await brandById((p as { brand_id?: string }).brand_id),
-        props: { contactName: contact.first_name, proposalUrl: `${appUrl}/proposals/view/${(p as { view_token: string }).view_token}` },
+        brand: await brandById(p.brand_id),
+        props: { contactName: contact.first_name, proposalUrl: `${appUrl}/proposals/view/${p.view_token}` },
+        contactId: p.contact_id,
       })
     } else if (kind === 'onboarding_welcome') {
-      const { data: deal } = await supabase
-        .from('deals').select('contact:contacts(email, first_name)').eq('id', id).maybeSingle()
-      const contact = (deal as { contact?: { email: string; first_name: string } } | null)?.contact
-      if (!contact?.email) { res.status(400).json({ error: 'No contact email' }); return }
+      const { data: deal } = await supabase.from('deals').select('contact_id').eq('id', id).maybeSingle()
+      if (!deal) { console.error('[email/send] deal not found', id); res.status(400).json({ error: 'Deal not found' }); return }
+      const { data: contact } = await supabase
+        .from('contacts').select('email, first_name').eq('id', deal.contact_id).maybeSingle()
+      if (!contact?.email) { console.error('[email/send] no contact email', { deal: id, contact_id: deal.contact_id }); res.status(400).json({ error: 'No contact email' }); return }
       const { data: prop } = await supabase
         .from('proposals').select('brand_id').eq('deal_id', id).not('signed_at', 'is', null).limit(1).maybeSingle()
       await sendEmail({
         to: contact.email,
         templateId: 'onboarding_welcome',
-        brand: await brandById((prop as { brand_id?: string } | null)?.brand_id),
+        brand: await brandById(prop?.brand_id),
         props: { contactName: contact.first_name },
+        contactId: deal.contact_id,
       })
     } else if (kind === 'audit_results') {
       const { data: audit } = await supabase
@@ -91,6 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     res.status(200).json({ ok: true })
   } catch (e) {
+    console.error('[email/send] error', kind, id, e)
     res.status(500).json({ error: e instanceof Error ? e.message : 'Send failed' })
   }
 }
