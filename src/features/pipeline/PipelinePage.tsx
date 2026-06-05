@@ -8,8 +8,13 @@ import { format } from 'date-fns'
 import { Plus, X } from 'lucide-react'
 import {
   usePipelineStages, useOpenDeals, useClosedDeals, useMoveDeal, useUpdateDeal,
-  useCloseDeal, type DealRow,
+  useCloseDeal, useDeleteDeal, type DealRow,
 } from './usePipeline'
+import { toast } from 'sonner'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { useActiveUsers } from '@/features/crm/useContacts'
 import NewDealDialog from './NewDealDialog'
 import { cn } from '@/lib/utils'
@@ -306,6 +311,7 @@ function DealDetailPanel({
   const moveDeal = useMoveDeal()
   const updateDeal = useUpdateDeal()
   const closeDeal = useCloseDeal()
+  const deleteDeal = useDeleteDeal()
   const [prob, setProb] = useState(String(deal.probability ?? ''))
 
   const value = Number(deal.value ?? 0)
@@ -410,6 +416,30 @@ function DealDetailPanel({
             Build proposal
           </Button>
         )}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">Delete</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this deal?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Removes “{deal.title}” from the pipeline. Linked proposals, invoices, and audits are kept but detached from the deal.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deleteDeal.mutate(deal.id, {
+                  onSuccess: () => { toast.success('Deal deleted'); onClose() },
+                  onError: (e) => toast.error(e instanceof Error ? e.message : 'Could not delete'),
+                })}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )

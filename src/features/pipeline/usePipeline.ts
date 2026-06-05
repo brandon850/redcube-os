@@ -148,6 +148,18 @@ export function useCloseDeal() {
   })
 }
 
+/** Delete a deal. Proposals/invoices/audits/sites keep their records but detach (FK SET NULL). */
+export function useDeleteDeal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (dealId: string) => {
+      const { error } = await supabase.from('deals').delete().eq('id', dealId)
+      if (error) throw new Error(error.message)
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['deals'] }),
+  })
+}
+
 export interface NewDealInput {
   contactId: string
   companyId: string | null
